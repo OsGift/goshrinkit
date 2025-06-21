@@ -29,7 +29,7 @@ func LoadConfig() *Config {
 	cfg := &Config{
 		Port:         getEnv("PORT", "8080"),
 		DatabasePath: getEnv("DATABASE_PATH", "./goshrinkit.db"),
-		JWTSecret:    getEnv("JWT_SECRET", "supersecretjwtkeythatshouldbeverylongandrandom"), // IMPORTANT: Change this in production!
+		JWTSecret:    getEnv("JWT_SECRET", "123456789093245678909876543234657687"), // IMPORTANT: Change this in production!
 	}
 
 	if cfg.JWTSecret == "supersecretjwtkeythatshouldbeverylongandrandom" {
