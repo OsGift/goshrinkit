@@ -17,7 +17,7 @@
             background-color: #f0f2f5; /* Light gray background */
         }
         .container {
-            max-width: 800px; /* Max width for content area */
+            max-width: 1024px; /* Wider container for the new layout */
             margin: 0 auto; /* Center the container */
             padding: 2rem; /* Padding around content */
         }
@@ -25,7 +25,7 @@
             background-color: white; /* White background for card elements */
             border-radius: 0.75rem; /* Rounded corners */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            padding: 2rem; /* Internal padding */
+            padding: 1.5rem; /* Internal padding, slightly less for individual link cards */
         }
         .nav-link {
             padding: 0.5rem 1rem; /* Padding for navigation links */
@@ -38,19 +38,21 @@
         .nav-link:hover {
             background-color: #e0e7ff; /* Light indigo on hover */
         }
-        .table-header {
-            background-color: #edf2f7; /* Light gray background for table headers */
-            font-weight: 600; /* Semi-bold font */
-            padding: 0.75rem 1rem; /* Padding for table headers */
-            text-align: left; /* Left align text */
+        /* Adjusted copy button style for the card layout */
+        .copy-button {
+            background: #e0e7ff; /* Light blue background */
+            border: none;
+            cursor: pointer;
+            color: #4c51bf; /* Indigo color for the icon */
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 600;
         }
-        .table-row {
-            border-bottom: 1px solid #e2e8f0; /* Separator between table rows */
-        }
-        .table-data {
-            padding: 0.75rem 1rem; /* Padding for table data cells */
-            vertical-align: top; /* Align content to the top */
-            word-break: break-all; /* Ensure long URLs wrap to prevent overflow */
+        .copy-button:hover {
+            background-color: #c3dafe; /* Slightly darker blue on hover */
         }
         /* Custom Modal Styles (for messages, replacing alert()) */
         .modal {
@@ -89,62 +91,83 @@
             text-decoration: none; /* No underline */
             cursor: pointer; /* Ensure pointer cursor */
         }
-        .copy-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #4c51bf; /* Indigo color for the icon */
-            margin-left: 0.5rem;
-            padding: 0.25rem;
-            border-radius: 0.25rem;
-            transition: background-color 0.2s ease-in-out;
-        }
-        .copy-button:hover {
-            background-color: #e0e7ff; /* Light indigo on hover */
-        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
     <header class="bg-white shadow-sm py-4">
         <nav class="container flex justify-between items-center">
             <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>
-            <div>
-                <!-- Navigation links -->
-                <a href="/login.html" class="nav-link mr-4">Login</a>
-                <a href="/register.html" class="nav-link mr-4">Register</a>
-                <a href="/" class="nav-link">Shorten URL</a>
-                <!-- Logout button -->
-                <button id="logoutButton" class="nav-link bg-red-100 text-red-700 hover:bg-red-200 ml-4">Logout</button>
+            <div class="flex items-center space-x-4">
+                <!-- Top right icons/buttons, placeholder for Bitly-like header -->
+                <button class="text-gray-600 hover:text-gray-800"><i class="fas fa-search text-xl"></i></button>
+                <button class="text-gray-600 hover:text-gray-800 font-semibold py-2 px-4 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700">Upgrade</button>
+                <button class="text-gray-600 hover:text-gray-800"><i class="fas fa-question-circle text-xl"></i></button>
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">G</div>
+                    <span class="text-gray-800">Gift Ayodele</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                </div>
             </div>
         </nav>
     </header>
 
     <main class="flex-grow container mt-10">
-        <div class="card">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Your Shortened Links</h2>
-            <!-- Loading message -->
-            <div id="loadingMessage" class="text-center text-gray-600">Loading your links...</div>
-            <!-- Message when no links are found -->
-            <div id="noLinksMessage" class="text-center text-gray-600 hidden">You haven't shortened any links yet.</div>
-            <!-- Error message display -->
-            <div id="errorMessage" class="text-center text-red-600 hidden"></div>
-           
-            <!-- Table to display shortened links -->
-            <div id="linksTableContainer" class="overflow-x-auto hidden">
-                <table class="min-w-full bg-white rounded-lg shadow-sm">
-                    <thead>
-                        <tr>
-                            <th class="table-header rounded-tl-lg">Short URL</th>
-                            <th class="table-header">Original URL</th>
-                            <th class="table-header">Visits</th>
-                            <th class="table-header rounded-tr-lg">Created At</th>
-                        </tr>
-                    </thead>
-                    <tbody id="linksTableBody">
-                        <!-- Links will be dynamically inserted here by JavaScript -->
-                    </tbody>
-                </table>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-3xl font-bold text-gray-800">Bitly Links</h2>
+            <a href="/" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-200">
+                Create link
+            </a>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="bg-white p-6 rounded-lg shadow-sm mb-6 flex items-center space-x-4">
+            <div class="relative flex-grow">
+                <input type="text" placeholder="Search links" class="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
             </div>
+            <button class="px-4 py-2 border rounded-md bg-white hover:bg-gray-50 text-gray-700">
+                <i class="fas fa-calendar-alt mr-2"></i> Filter by created date
+            </button>
+            <button class="px-4 py-2 border rounded-md bg-white hover:bg-gray-50 text-gray-700">
+                <i class="fas fa-filter mr-2"></i> Add filters
+            </button>
+        </div>
+
+        <!-- Action Bar (Select, Export, Hide, Tag, Show Active) -->
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex justify-between items-center text-gray-600">
+            <div class="flex items-center space-x-4">
+                <a href="#" class="hover:text-blue-600">0 selected</a>
+                <span class="text-gray-300">|</span>
+                <a href="#" class="hover:text-blue-600">Export</a>
+                <span class="text-gray-300">|</span>
+                <a href="#" class="hover:text-blue-600">Hide</a>
+                <span class="text-gray-300">|</span>
+                <a href="#" class="hover:text-blue-600">Tag</a>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span>Show: Active</span>
+                <i class="fas fa-chevron-down text-sm"></i>
+            </div>
+        </div>
+
+        <!-- Loading, No Links, Error Messages -->
+        <div id="loadingMessage" class="text-center text-gray-600 my-8">Loading your links...</div>
+        <div id="noLinksMessage" class="text-center text-gray-600 my-8 hidden">You haven't shortened any links yet.</div>
+        <div id="errorMessage" class="text-center text-red-600 my-8 hidden"></div>
+       
+        <!-- Links List (now cards instead of table) -->
+        <div id="linksListContainer" class="space-y-4">
+            <!-- Links will be dynamically inserted here as cards -->
+        </div>
+
+        <div class="text-center text-blue-600 text-sm mt-8 py-4 px-6 bg-blue-50 rounded-lg border border-blue-200">
+            <i class="fas fa-magic mr-2"></i> Change a link's destination, even after you've shared it. Get redirects with every plan. <a href="#" class="underline font-semibold">View plans</a>
+        </div>
+
+        <div class="text-center text-gray-400 mt-10">
+            <hr class="border-t border-gray-300 my-4">
+            You've reached the end of your links
+            <hr class="border-t border-gray-300 my-4">
         </div>
     </main>
 
@@ -166,12 +189,11 @@
         const loadingMessage = document.getElementById('loadingMessage');
         const noLinksMessage = document.getElementById('noLinksMessage');
         const errorMessageDiv = document.getElementById('errorMessage');
-        const linksTableContainer = document.getElementById('linksTableContainer');
-        const linksTableBody = document.getElementById('linksTableBody');
+        const linksListContainer = document.getElementById('linksListContainer'); // Changed from linksTableContainer
 
         const customModal = document.getElementById('customModal');
         const modalMessage = document.getElementById('modalMessage');
-        const closeButton = document.querySelector('#customModal .close-button'); // Ensure targeting modal's close button
+        const closeButton = document.querySelector('#customModal .close-button');
 
         // Event listener for when the DOM content is fully loaded
         document.addEventListener('DOMContentLoaded', fetchUserLinks);
@@ -261,7 +283,7 @@
             loadingMessage.classList.remove('hidden');
             noLinksMessage.classList.add('hidden');
             errorMessageDiv.classList.add('hidden');
-            linksTableContainer.classList.add('hidden');
+            linksListContainer.classList.add('hidden'); // Changed from linksTableContainer
 
             try {
                 // Send GET request to fetch user's URLs
@@ -289,9 +311,9 @@
                     if (Array.isArray(responseData.data) && responseData.data.length === 0) {
                         noLinksMessage.classList.remove('hidden'); // Show "no links" message
                     } else if (Array.isArray(responseData.data)) {
-                        // Render the links table if data is an array
-                        renderLinksTable(responseData.data);
-                        linksTableContainer.classList.remove('hidden');
+                        // Render the links list as cards if data is an array
+                        renderLinksList(responseData.data); // Changed function name
+                        linksListContainer.classList.remove('hidden');
                     } else {
                         // Unexpected data format received (success: true but data not an array)
                         errorMessageDiv.textContent = 'Unexpected data format received from server (expected a list of links).';
@@ -314,48 +336,79 @@
                 console.error('Network error or server unavailable while fetching links:', error);
                 loadingMessage.classList.add('hidden'); // Ensure loading is hidden on network error
                 errorMessageDiv.textContent = 'Network error or server unavailable. Please try again.';
-                errorDiv.classList.remove('hidden');
+                // `errorDiv` is not used in the screenshot's design for showing network errors directly
+                // You might consider adding a more prominent error display if desired.
             }
         }
 
-        // Renders the list of shortened URLs into the HTML table
-        function renderLinksTable(links) {
-            linksTableBody.innerHTML = ''; // Clear any existing table rows
+        // Renders the list of shortened URLs as cards
+        function renderLinksList(links) {
+            linksListContainer.innerHTML = ''; // Clear any existing content
 
-            // Iterate over each link and create a table row
+            // Sort links by CreatedAt in descending order (newest first)
+            links.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // Iterate over each link and create a card
             links.forEach(link => {
-                const row = document.createElement('tr');
-                row.classList.add('table-row');
-
                 // Construct the full short URL using the current origin (e.g., "http://localhost:8080/my-slug")
                 const fullShortURL = `${window.location.origin}/${link.short_url}`;
 
                 // Format the 'CreatedAt' timestamp into a localized date string
                 const createdAtDate = new Date(link.created_at);
-                const formattedDate = createdAtDate.toLocaleDateString(); // e.g., "7/21/2024" or "21/07/2024"
+                const formattedDate = createdAtDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }); // e.g., "Jun 21, 2025"
 
-                // Populate the row's inner HTML with link data and the copy button
-                row.innerHTML = `
-                    <td class="table-data">
-                        <div class="flex items-center">
-                            <a href="${fullShortURL}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline flex-grow">${fullShortURL}</a>
+                const linkCard = document.createElement('div');
+                linkCard.classList.add('card', 'flex', 'flex-col', 'space-y-4'); // Tailwind classes for card styling
+
+                linkCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-grow">
+                            <!-- Placeholder for user/title -->
+                            <p class="text-gray-800 font-semibold mb-1">Gift Ayodele - Golang Backend Engineer</p>
+                            <a href="${fullShortURL}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-bold text-lg leading-tight break-all">
+                                ${link.short_url}
+                            </a>
+                            <p class="text-gray-500 text-sm break-all">${link.original_url}</p>
+                        </div>
+                        <div class="flex items-center space-x-2 ml-4">
                             <button class="copy-button" data-url="${fullShortURL}">
-                                <i class="far fa-copy"></i>
+                                <i class="far fa-copy mr-1"></i> Copy
+                            </button>
+                            <button class="copy-button" data-url="${fullShortURL}" title="Share">
+                                <i class="fas fa-share-alt mr-1"></i> Share
+                            </button>
+                            <button class="copy-button" title="More Options">
+                                <i class="fas fa-ellipsis-h"></i>
                             </button>
                         </div>
-                    </td>
-                    <td class="table-data">${link.original_url}</td>
-                    <td class="table-data">${link.visits}</td>
-                    <td class="table-data">${formattedDate}</td>
+                    </div>
+                    <div class="flex items-center text-gray-500 text-sm space-x-4">
+                        <span class="flex items-center">
+                            <i class="fas fa-mouse-pointer mr-1"></i> Clicked: ${link.visits}
+                        </span>
+                        <span class="flex items-center">
+                            <i class="fas fa-calendar-alt mr-1"></i> ${formattedDate}
+                        </span>
+                        <span class="flex items-center">
+                            <i class="fas fa-tag mr-1"></i> No tags
+                        </span>
+                    </div>
                 `;
-                linksTableBody.appendChild(row); // Add the row to the table body
+                linksListContainer.appendChild(linkCard);
             });
 
             // Add event listeners to all copy buttons after they are rendered
             document.querySelectorAll('.copy-button').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const urlToCopy = event.currentTarget.dataset.url;
-                    copyToClipboard(urlToCopy);
+                    if (urlToCopy) { // Only copy if data-url attribute is present (for Copy/Share)
+                        copyToClipboard(urlToCopy);
+                    }
+                    // For "Share" and "More Options", you'd add specific logic here if implemented
                 });
             });
         }
