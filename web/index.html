@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>goshrinkit - URL Shortener</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .button-primary {
+            background-color: #4c51bf;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .button-primary:hover {
+            background-color: #3b3f8f;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: #4c51bf;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .nav-link:hover {
+            background-color: #e0e7ff;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <header class="bg-white shadow-sm py-4">
+        <nav class="container flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>
+            <div>
+                <a href="/login.html" class="nav-link mr-4">Login</a>
+                <a href="/register.html" class="nav-link mr-4">Register</a>
+                <a href="/dashboard.html" class="nav-link">Dashboard</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow container mt-10">
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Shorten Your URL</h2>
+            <form id="shortenForm" class="space-y-4">
+                <div>
+                    <label for="originalUrl" class="block text-gray-700 font-medium mb-1">Long URL:</label>
+                    <input type="url" id="originalUrl" name="original_url" placeholder="https://example.com/very/long/url" class="input-field" required>
+                </div>
+                <div>
+                    <label for="customSlug" class="block text-gray-700 font-medium mb-1">Custom Slug (optional):</label>
+                    <input type="text" id="customSlug" name="custom_slug" placeholder="my-awesome-link" class="input-field">
+                </div>
+                <div>
+                    <label for="expiration" class="block text-gray-700 font-medium mb-1">Expiration Date (optional, ISO 8601):</label>
+                    <input type="datetime-local" id="expiration" name="expiration" class="input-field">
+                    <p class="text-sm text-gray-500 mt-1">Example: 2024-12-31T23:59:59Z</p>
+                </div>
+                <button type="submit" class="button-primary w-full">Shorten URL</button>
+            </form>
+
+            <div id="result" class="mt-8 p-4 bg-green-100 border border-green-300 rounded-lg text-green-800 hidden">
+                <p class="font-semibold mb-2">Your shortened URL:</p>
+                <a id="shortenedLink" class="text-blue-600 hover:underline break-all" target="_blank" rel="noopener noreferrer"></a>
+                <button onclick="copyToClipboard()" class="ml-4 px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600">Copy</button>
+            </div>
+            <div id="error" class="mt-8 p-4 bg-red-100 border border-red-300 rounded-lg text-red-800 hidden">
+                <p id="errorMessage" class="font-semibold"></p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-4 mt-10">
+        <p>&copy; 2024 goshrinkit. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const shortenForm = document.getElementById('shortenForm');
+        const resultDiv = document.getElementById('result');
+        const errorDiv = document.getElementById('error');
+        const shortenedLink = document.getElementById('shortenedLink');
+        const errorMessage = document.getElementById('errorMessage');
+        const expirationInput = document.getElementById('expiration');
+
+        // Set default expiration to 1 day from now
+        const now = new Date();
+        now.setDate(now.getDate() + 1);
+        expirationInput.value = now.toISOString().substring(0, 16); // Format for datetime-local input
+
+        shortenForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+
+            const originalUrl = document.getElementById('originalUrl').value;
+            const customSlug = document.getElementById('customSlug').value;
+            const expiration = expirationInput.value ? new Date(expirationInput.value).toISOString() : '';
+
+            const token = localStorage.getItem('token'); // Get JWT token from local storage
+
+            const payload = {
+                original_url: originalUrl,
+            };
+            if (customSlug) {
+                payload.custom_slug = customSlug;
+            }
+            if (expiration) {
+                payload.expiration = expiration;
+            }
+
+            try {
+                const response = await fetch('/api/v1/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const fullShortURL = `${window.location.origin}/${data.short_url}`;
+                    shortenedLink.href = fullShortURL;
+                    shortenedLink.textContent = fullShortURL;
+                    resultDiv.classList.remove('hidden');
+                } else {
+                    errorMessage.textContent = data.message || 'An unexpected error occurred.';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'Network error or server unavailable.';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        function copyToClipboard() {
+            const linkText = shortenedLink.textContent;
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = linkText;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('Copied to clipboard!'); // Replace with custom modal in production
+        }
+    </script>
+</body>
+</html>

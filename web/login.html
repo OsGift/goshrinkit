@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GoShrink.it</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .button-primary {
+            background-color: #4c51bf;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .button-primary:hover {
+            background-color: #3b3f8f;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: #4c51bf;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .nav-link:hover {
+            background-color: #e0e7ff;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <header class="bg-white shadow-sm py-4">
+        <nav class="container flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>       
+            <div>
+                <a href="/login.html" class="nav-link mr-4">Login</a>
+                <a href="/register.html" class="nav-link mr-4">Register</a>
+                <a href="/dashboard.html" class="nav-link">Dashboard</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow container mt-10">
+        <div class="card w-full max-w-md mx-auto">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Login</h2>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-gray-700 font-medium mb-1">Username:</label>
+                    <input type="text" id="username" name="username" placeholder="yourusername" class="input-field" required>
+                </div>
+                <div>
+                    <label for="password" class="block text-gray-700 font-medium mb-1">Password:</label>
+                    <input type="password" id="password" name="password" placeholder="********" class="input-field" required>
+                </div>
+                <button type="submit" class="button-primary w-full">Login</button>
+            </form>
+
+            <div id="message" class="mt-6 p-4 rounded-lg hidden">
+                <p id="messageText" class="font-semibold"></p>
+            </div>
+            <p class="text-center text-gray-600 mt-4">Don't have an account? <a href="/register.html" class="text-blue-600 hover:underline">Register here</a></p>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-4 mt-10">
+        <p>&copy; 2024 GoShrink.it. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const messageDiv = document.getElementById('message');
+        const messageText = document.getElementById('messageText');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            messageDiv.classList.add('hidden');
+            messageDiv.classList.remove('bg-green-100', 'border-green-300', 'text-green-800', 'bg-red-100', 'border-red-300', 'text-red-800');
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/v1/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token); // Store JWT token
+                    messageText.textContent = 'Login successful! Redirecting to dashboard...';
+                    messageDiv.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
+                    messageDiv.classList.remove('hidden');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1500);
+                } else {
+                    messageText.textContent = data.message || 'Login failed. Please check your credentials.';
+                    messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                    messageDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                messageText.textContent = 'Network error or server unavailable.';
+                messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                messageDiv.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
