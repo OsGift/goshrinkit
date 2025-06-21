@@ -4,6 +4,10 @@ FROM golang:1.22-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+# Install git and ca-certificates in the builder stage
+# This ensures that 'go mod download' can fetch modules via HTTPS and git if needed.
+RUN apk add --no-cache git ca-certificates
+
 # Copy go mod and sum files
 COPY go.mod go.sum ./
 
@@ -15,14 +19,13 @@ COPY . .
 
 # Build the application
 # CGO_ENABLED=0 is important for creating a static binary
-# -a ensures all packages are rebuilt (useful for alpine image)
-# -installsuffix cgo ensures different naming for cgo-dependent binaries
-RUN CGO_ENABLED=0 GOOS=linux go build -o /goshrinkit ./cmd/api
+# We now build the main.go directly from the root of the app directory (where it will be moved)
+RUN CGO_ENABLED=0 GOOS=linux go build -o /goshrink.it .
 
 # Start a new stage to create a smaller final image
 FROM alpine:latest
 
-# Install ca-certificates to ensure HTTPS works
+# Install ca-certificates to ensure HTTPS works in the final image as well
 RUN apk --no-cache add ca-certificates
 
 # Set working directory
