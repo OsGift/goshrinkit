@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/OsGift/goshrinkit/internal/storage"
-
+	"github.com/OsGift/goshrinkit/internal/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -54,17 +54,17 @@ type Claims struct {
 func (s *Service) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
 	// Input validation
 	if req.Username == "" || req.Password == "" {
-		http.Error(w, "Username and password cannot be empty", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "Username and password cannot be empty", http.StatusBadRequest)
 		return
 	}
 	if len(req.Password) < 8 {
-		http.Error(w, "Password must be at least 8 characters long", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "Password must be at least 8 characters long", http.StatusBadRequest)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (s *Service) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -85,47 +85,46 @@ func (s *Service) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	existingUser, err := s.storage.GetUserByUsername(r.Context(), req.Username)
 	if err != nil && err != storage.ErrUserNotFound {
 		log.Printf("Error checking existing user: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 	if existingUser != nil {
-		http.Error(w, "Username already exists", http.StatusConflict)
+		utils.SendErrorResponse(w, "Username already exists", http.StatusConflict)
 		return
 	}
 
 	// Save user to database
 	if err := s.storage.CreateUser(r.Context(), user); err != nil {
 		log.Printf("Error creating user: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"})
+	utils.SendSuccessResponse(w, nil, "User registered successfully", http.StatusCreated)
 }
 
 // LoginHandler handles user login and JWT token generation.
 func (s *Service) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
 	user, err := s.storage.GetUserByUsername(r.Context(), req.Username)
 	if err == storage.ErrUserNotFound {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		utils.SendErrorResponse(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 	if err != nil {
 		log.Printf("Error retrieving user: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	// Compare password with hashed password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		utils.SendErrorResponse(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
@@ -144,12 +143,11 @@ func (s *Service) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := token.SignedString(s.jwtKey)
 	if err != nil {
 		log.Printf("Error signing token: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
+	utils.SendSuccessWithTokenResponse(w, nil, tokenString, "Login successful", http.StatusOK)
 }
 
 // AuthMiddleware is a middleware to protect authenticated routes.
@@ -157,7 +155,7 @@ func (s *Service) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
-			http.Error(w, "Unauthorized: Missing token", http.StatusUnauthorized)
+			utils.SendErrorResponse(w, "Unauthorized: Missing token", http.StatusUnauthorized)
 			return
 		}
 
@@ -173,16 +171,16 @@ func (s *Service) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {
-				http.Error(w, "Unauthorized: Invalid token signature", http.StatusUnauthorized)
+				utils.SendErrorResponse(w, "Unauthorized: Invalid token signature", http.StatusUnauthorized)
 				return
 			}
 			log.Printf("Error parsing token: %v", err)
-			http.Error(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
+			utils.SendErrorResponse(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
 			return
 		}
 
 		if !token.Valid {
-			http.Error(w, "Unauthorized: Token expired or invalid", http.StatusUnauthorized)
+			utils.SendErrorResponse(w, "Unauthorized: Token expired or invalid", http.StatusUnauthorized)
 			return
 		}
 

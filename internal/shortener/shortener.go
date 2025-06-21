@@ -13,6 +13,7 @@ import (
 
 	"github.com/OsGift/goshrinkit/internal/auth"
 	"github.com/OsGift/goshrinkit/internal/storage"
+	"github.com/OsGift/goshrinkit/internal/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -39,11 +40,10 @@ type ShortenRequest struct {
 	Expiration  string `json:"expiration"`  // Optional expiration date/TTL
 }
 
-// ShortenResponse represents the response body for URL shortening.
-type ShortenResponse struct {
+// ShortenResponsePayload represents the data returned for a successful shorten operation.
+type ShortenResponsePayload struct {
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
-	Message     string `json:"message"`
 }
 
 // UserURLResponse represents a shortened URL for a user's dashboard.
@@ -68,13 +68,13 @@ func generateSlug(length int) (string, error) {
 func (s *Service) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	var req ShortenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
 	// Basic URL validation
 	if req.OriginalURL == "" {
-		http.Error(w, "Original URL cannot be empty", http.StatusBadRequest)
+		utils.SendErrorResponse(w, "Original URL cannot be empty", http.StatusBadRequest)
 		return
 	}
 	// TODO: More robust URL validation (e.g., using net/url.Parse)
@@ -84,17 +84,17 @@ func (s *Service) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 		// Validate custom slug characters (alphanumeric, hyphens allowed)
 		// For simplicity, we'll allow it as is for now. In production, use regex.
 		if len(req.CustomSlug) > 20 { // Limit custom slug length
-			http.Error(w, "Custom slug too long (max 20 characters)", http.StatusBadRequest)
+			utils.SendErrorResponse(w, "Custom slug too long (max 20 characters)", http.StatusBadRequest)
 			return
 		}
 		exists, err := s.storage.CheckSlugExists(r.Context(), req.CustomSlug)
 		if err != nil {
 			log.Printf("Error checking custom slug existence: %v", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 		if exists {
-			http.Error(w, storage.ErrSlugAlreadyExists.Error(), http.StatusConflict)
+			utils.SendErrorResponse(w, storage.ErrSlugAlreadyExists.Error(), http.StatusConflict)
 			return
 		}
 		slug = req.CustomSlug
@@ -104,13 +104,13 @@ func (s *Service) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 			newSlug, err := generateSlug(defaultSlugLength)
 			if err != nil {
 				log.Printf("Error generating slug: %v", err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
 			exists, err := s.storage.CheckSlugExists(r.Context(), newSlug)
 			if err != nil {
 				log.Printf("Error checking slug existence: %v", err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
 			if !exists {
@@ -125,7 +125,7 @@ func (s *Service) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	if req.Expiration != "" {
 		parsedTime, err := time.Parse(time.RFC3339, req.Expiration) // Expect ISO 8601 format
 		if err != nil {
-			http.Error(w, "Invalid expiration date format. Use ISO 8601 (e.g., 2006-01-02T15:04:05Z)", http.StatusBadRequest)
+			utils.SendErrorResponse(w, "Invalid expiration date format. Use ISO 8601 (e.g., 2006-01-02T15:04:05Z)", http.StatusBadRequest)
 			return
 		}
 		expirationTime = &parsedTime
@@ -147,19 +147,16 @@ func (s *Service) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := s.storage.CreateURL(r.Context(), url); err != nil {
 		log.Printf("Error saving URL to database: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	response := ShortenResponse{
+	responsePayload := ShortenResponsePayload{
 		ShortURL:    slug,
 		OriginalURL: req.OriginalURL,
-		Message:     "URL shortened successfully",
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	utils.SendSuccessResponse(w, responsePayload, "URL shortened successfully", http.StatusCreated)
 }
 
 // RedirectHandler handles redirection from short URL to original URL.
@@ -169,18 +166,18 @@ func (s *Service) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 
 	url, err := s.storage.GetURLByShortURL(r.Context(), slug)
 	if err == storage.ErrURLNotFound {
-		http.Error(w, "Short URL not found", http.StatusNotFound)
+		utils.SendErrorResponse(w, "Short URL not found", http.StatusNotFound)
 		return
 	}
 	if err != nil {
 		log.Printf("Error retrieving URL from database: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	// Check for expiration
 	if url.ExpirationDate != nil && time.Now().After(*url.ExpirationDate) {
-		http.Error(w, "Short URL has expired", http.StatusGone)
+		utils.SendErrorResponse(w, "Short URL has expired", http.StatusGone)
 		return
 	}
 
@@ -190,7 +187,8 @@ func (s *Service) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	// or use a message queue for async analytics.
 	if err := s.storage.IncrementURLVisits(r.Context(), url.ID); err != nil {
 		log.Printf("Error incrementing URL visits: %v", err)
-		// Do not block redirection for analytics error
+		// Do not block redirection for analytics error if it's not critical.
+		// For this app, we'll let it pass but log the error.
 	}
 
 	http.Redirect(w, r, url.OriginalURL, http.StatusMovedPermanently)
@@ -200,20 +198,21 @@ func (s *Service) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) GetUserURLsHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := auth.GetUserIDFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "Unauthorized: User ID not found in context", http.StatusUnauthorized)
+		utils.SendErrorResponse(w, "Unauthorized: User ID not found in context", http.StatusUnauthorized)
 		return
 	}
 
 	urls, err := s.storage.GetURLsByUserID(r.Context(), userID)
 	if err != nil {
 		log.Printf("Error retrieving user URLs: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.SendErrorResponse(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	var response []UserURLResponse
+	// 'responsePayload' will be an empty slice if 'urls' is empty, which marshals to '[]'
+	var responsePayload []UserURLResponse
 	for _, u := range urls {
-		response = append(response, UserURLResponse{
+		responsePayload = append(responsePayload, UserURLResponse{
 			ShortURL:    u.ShortURL,
 			OriginalURL: u.OriginalURL,
 			Visits:      u.Visits,
@@ -221,6 +220,5 @@ func (s *Service) GetUserURLsHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	utils.SendSuccessResponse(w, responsePayload, "Successfully retrieved user URLs", http.StatusOK)
 }

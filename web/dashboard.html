@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - goshrinkit</title>
+    <title>Dashboard - GoShrink.it</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -88,7 +88,7 @@
     </main>
 
     <footer class="bg-gray-800 text-white text-center py-4 mt-10">
-        <p>&copy; 2024 goshrinkit. All rights reserved.</p>
+        <p>&copy; 2024 GoShrink.it. All rights reserved.</p>
     </footer>
 
     <script>
@@ -108,8 +108,14 @@
 
         async function fetchUserLinks() {
             const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login.html'; // Redirect if no token
+            // IMPORTANT: Check if token is a valid non-empty string
+            if (!token || typeof token !== 'string' || token.length === 0) {
+                console.warn('No valid token found in localStorage. Redirecting to login.');
+                errorMessageDiv.textContent = 'Session expired or not logged in. Please log in again.';
+                errorMessageDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 1500); // Give user a moment to see the message
                 return;
             }
 
@@ -122,37 +128,52 @@
                 const response = await fetch('/api/v1/me/urls', {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': `Bearer ${token}`, // Ensure this format is consistent with backend's AuthMiddleware
                         'Content-Type': 'application/json'
                     },
                 });
 
-                loadingMessage.classList.add('hidden');
+                loadingMessage.classList.add('hidden'); // Hide loading message once response is received
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.length === 0) {
-                        noLinksMessage.classList.remove('hidden');
-                    } else {
-                        renderLinksTable(data);
-                        linksTableContainer.classList.remove('hidden');
-                    }
-                } else if (response.status === 401) {
-                    errorMessageDiv.textContent = 'Session expired or unauthorized. Please log in again.';
-                    errorMessageDiv.classList.remove('hidden');
-                    localStorage.removeItem('token');
-                    setTimeout(() => {
-                        window.location.href = '/login.html';
-                    }, 2000);
+                // Robust response parsing: Expect GeneralResponse from backend
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
                 } else {
-                    const errorData = await response.json();
-                    errorMessageDiv.textContent = errorData.message || 'Failed to fetch links. Please try again later.';
+                    responseData = { success: false, message: await response.text() }; // Fallback for non-JSON or empty responses
+                }
+
+                if (response.ok && responseData.success) {
+                    // Data is expected to be an array here (even if empty)
+                    if (Array.isArray(responseData.Data) && responseData.Data.length === 0) {
+                        noLinksMessage.classList.remove('hidden'); // Show "no links" message
+                    } else if (Array.isArray(responseData.Data)) { // Ensure it's an array before rendering
+                        renderLinksTable(responseData.Data); // Pass the actual data array
+                        linksTableContainer.classList.remove('hidden');
+                    } else {
+                        // This case handles if response.ok is true but Data is not an array, which is unexpected
+                        errorMessageDiv.textContent = 'Unexpected data format received from server.';
+                        errorMessageDiv.classList.remove('hidden');
+                    }
+                } else {
+                    // Handle specific error statuses or use generic error message
+                    if (response.status === 401) {
+                        errorMessageDiv.textContent = 'Session expired or unauthorized. Please log in again.';
+                        localStorage.removeItem('token'); // Clear invalid token
+                        setTimeout(() => {
+                            window.location.href = '/login.html';
+                        }, 2000); // Redirect after a short delay
+                    } else {
+                        // Display error message from backend if available, otherwise a generic one
+                        errorMessageDiv.textContent = responseData.message || 'Failed to fetch links. An unexpected server error occurred.';
+                    }
                     errorMessageDiv.classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Error fetching user links:', error);
-                loadingMessage.classList.add('hidden');
-                errorMessageDiv.textContent = 'Network error or server unavailable.';
+                loadingMessage.classList.add('hidden'); // Ensure loading is hidden on network error
+                errorMessageDiv.textContent = 'Network error or server unavailable. Please try again.';
                 errorMessageDiv.classList.remove('hidden');
             }
         }

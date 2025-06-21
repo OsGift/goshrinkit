@@ -56,7 +56,6 @@
     <header class="bg-white shadow-sm py-4">
         <nav class="container flex justify-between items-center">
             <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>
-           
             <div>
                 <a href="/login.html" class="nav-link mr-4">Login</a>
                 <a href="/register.html" class="nav-link mr-4">Register</a>
@@ -127,10 +126,16 @@
                     body: JSON.stringify({ username, password }),
                 });
 
-                // Always try to parse JSON, even for error responses, as backend sends JSON errors
-                const data = await response.json(); 
+                // Robust response parsing: Expect GeneralResponse from backend
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
+                } else {
+                    responseData = { success: false, message: await response.text() }; // Fallback for non-JSON or empty responses
+                }
 
-                if (response.ok) {
+                if (response.ok && responseData.success) {
                     messageText.textContent = 'Registration successful! You can now log in.';
                     messageDiv.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
                     messageDiv.classList.remove('hidden');
@@ -140,7 +145,7 @@
                     }, 1500);
                 } else {
                     // Use the message from the backend's JSON response for errors
-                    messageText.textContent = data.message || 'Registration failed. Please try again.';
+                    messageText.textContent = responseData.message || 'Registration failed. Please try again.';
                     messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
                     messageDiv.classList.remove('hidden');
                 }

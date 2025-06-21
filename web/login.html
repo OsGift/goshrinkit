@@ -55,7 +55,7 @@
 <body class="flex flex-col min-h-screen">
     <header class="bg-white shadow-sm py-4">
         <nav class="container flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>       
+            <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>
             <div>
                 <a href="/login.html" class="nav-link mr-4">Login</a>
                 <a href="/register.html" class="nav-link mr-4">Register</a>
@@ -113,24 +113,38 @@
                     body: JSON.stringify({ username, password }),
                 });
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    localStorage.setItem('token', data.token); // Store JWT token
-                    messageText.textContent = 'Login successful! Redirecting to dashboard...';
-                    messageDiv.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
-                    messageDiv.classList.remove('hidden');
-                    setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 1500);
+                // Robust response parsing: Expect GeneralResponse from backend
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
                 } else {
-                    messageText.textContent = data.message || 'Login failed. Please check your credentials.';
+                    responseData = { success: false, message: await response.text() }; // Fallback for non-JSON or empty responses
+                }
+
+                if (response.ok && responseData.success) {
+                    // CORRECTED: Access token with lowercase 't'
+                    if (typeof responseData.token === 'string' && responseData.token.length > 0) {
+                        localStorage.setItem('token', responseData.token); // Store token
+                        messageText.textContent = 'Login successful! Redirecting to dashboard...';
+                        messageDiv.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
+                        messageDiv.classList.remove('hidden');
+                        setTimeout(() => {
+                            window.location.href = '/dashboard.html';
+                        }, 1500);
+                    } else {
+                        messageText.textContent = 'Login successful but no token received. Please try again.';
+                        messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                        messageDiv.classList.remove('hidden');
+                    }
+                } else {
+                    messageText.textContent = responseData.message || 'Login failed. Please check your credentials.';
                     messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
                     messageDiv.classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                messageText.textContent = 'Network error or server unavailable.';
+                errorMessage.textContent = 'Network error or server unavailable.';
                 messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
                 messageDiv.classList.remove('hidden');
             }

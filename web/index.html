@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>goshrinkit - URL Shortener</title>
+    <title>GoShrink.it - URL Shortener</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -96,7 +96,7 @@
     </main>
 
     <footer class="bg-gray-800 text-white text-center py-4 mt-10">
-        <p>&copy; 2024 goshrinkit. All rights reserved.</p>
+        <p>&copy; 2024 GoShrink.it. All rights reserved.</p>
     </footer>
 
     <script>
@@ -144,15 +144,22 @@
                     body: JSON.stringify(payload),
                 });
 
-                const data = await response.json();
+                // Robust response parsing: Expect GeneralResponse from backend
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
+                } else {
+                    responseData = { success: false, message: await response.text() }; // Fallback for non-JSON or empty responses
+                }
 
-                if (response.ok) {
-                    const fullShortURL = `${window.location.origin}/${data.short_url}`;
+                if (response.ok && responseData.success) {
+                    const fullShortURL = `${window.location.origin}/${responseData.Data.ShortURL}`; // Access Data.ShortURL
                     shortenedLink.href = fullShortURL;
                     shortenedLink.textContent = fullShortURL;
                     resultDiv.classList.remove('hidden');
                 } else {
-                    errorMessage.textContent = data.message || 'An unexpected error occurred.';
+                    errorMessage.textContent = responseData.message || 'An unexpected error occurred.';
                     errorDiv.classList.remove('hidden');
                 }
             } catch (error) {
