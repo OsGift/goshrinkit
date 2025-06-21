@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Google Font: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons, if needed for future features -->
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Custom styles for the overall page and components */
@@ -88,6 +88,19 @@
             color: black; /* Darken on hover/focus */
             text-decoration: none; /* No underline */
             cursor: pointer; /* Ensure pointer cursor */
+        }
+        .copy-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #4c51bf; /* Indigo color for the icon */
+            margin-left: 0.5rem;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .copy-button:hover {
+            background-color: #e0e7ff; /* Light indigo on hover */
         }
     </style>
 </head>
@@ -206,6 +219,31 @@
             }
         }
 
+        // --- Copy to clipboard function ---
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showModal('Copied to clipboard!', null, 1000);
+                }).catch(err => {
+                    console.error('Failed to copy using Clipboard API: ', err);
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+
+        // Fallback function for copying text to clipboard (deprecated but widely supported)
+        function fallbackCopyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = text;
+            tempInput.select();
+            document.execCommand('copy'); // Execute copy command
+            document.body.removeChild(tempInput);
+            showModal('Copied to clipboard! (Fallback method used)', null, 1000);
+        }
+
         // Fetches shortened URLs for the authenticated user from the backend
         async function fetchUserLinks() {
             const token = localStorage.getItem('token'); // Retrieve JWT token
@@ -276,7 +314,7 @@
                 console.error('Network error or server unavailable while fetching links:', error);
                 loadingMessage.classList.add('hidden'); // Ensure loading is hidden on network error
                 errorMessageDiv.textContent = 'Network error or server unavailable. Please try again.';
-                errorMessageDiv.classList.remove('hidden');
+                errorDiv.classList.remove('hidden');
             }
         }
 
@@ -289,21 +327,36 @@
                 const row = document.createElement('tr');
                 row.classList.add('table-row');
 
-                // Construct the full short URL using the current origin
+                // Construct the full short URL using the current origin (e.g., "http://localhost:8080/my-slug")
                 const fullShortURL = `${window.location.origin}/${link.short_url}`;
 
                 // Format the 'CreatedAt' timestamp into a localized date string
                 const createdAtDate = new Date(link.created_at);
                 const formattedDate = createdAtDate.toLocaleDateString(); // e.g., "7/21/2024" or "21/07/2024"
 
-                // Populate the row's inner HTML with link data
+                // Populate the row's inner HTML with link data and the copy button
                 row.innerHTML = `
-                    <td class="table-data"><a href="${fullShortURL}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${link.short_url}</a></td>
+                    <td class="table-data">
+                        <div class="flex items-center">
+                            <a href="${fullShortURL}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline flex-grow">${fullShortURL}</a>
+                            <button class="copy-button" data-url="${fullShortURL}">
+                                <i class="far fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
                     <td class="table-data">${link.original_url}</td>
                     <td class="table-data">${link.visits}</td>
                     <td class="table-data">${formattedDate}</td>
                 `;
                 linksTableBody.appendChild(row); // Add the row to the table body
+            });
+
+            // Add event listeners to all copy buttons after they are rendered
+            document.querySelectorAll('.copy-button').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const urlToCopy = event.currentTarget.dataset.url;
+                    copyToClipboard(urlToCopy);
+                });
             });
         }
     </script>
