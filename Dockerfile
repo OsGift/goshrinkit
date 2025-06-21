@@ -11,7 +11,10 @@ RUN apk add --no-cache git ca-certificates
 # Copy go mod and sum files
 COPY go.mod go.sum ./
 
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are unchanged
+# Ensure Go modules are clean and explicitly set a robust GOPROXY
+# This can help with network issues and ensure dependencies are resolved correctly.
+ENV GOPROXY=https://proxy.golang.org,direct
+RUN go mod tidy
 RUN go mod download
 
 # Copy the source code into the container
