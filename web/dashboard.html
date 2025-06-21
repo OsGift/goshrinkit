@@ -4,48 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - GoShrink.it</title>
+    <!-- Tailwind CSS for utility-first styling -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Google Font: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons, if needed for future features -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Custom styles for the overall page and components */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Inter', sans-serif; /* Apply Inter font globally */
+            background-color: #f0f2f5; /* Light gray background */
         }
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
+            max-width: 800px; /* Max width for content area */
+            margin: 0 auto; /* Center the container */
+            padding: 2rem; /* Padding around content */
         }
         .card {
-            background-color: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
+            background-color: white; /* White background for card elements */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            padding: 2rem; /* Internal padding */
         }
         .nav-link {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            text-decoration: none;
-            color: #4c51bf;
-            font-weight: 600;
-            transition: background-color 0.2s ease-in-out;
+            padding: 0.5rem 1rem; /* Padding for navigation links */
+            border-radius: 0.5rem; /* Rounded corners */
+            text-decoration: none; /* No underline by default */
+            color: #4c51bf; /* Primary link color */
+            font-weight: 600; /* Semi-bold font */
+            transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
         }
         .nav-link:hover {
-            background-color: #e0e7ff;
+            background-color: #e0e7ff; /* Light indigo on hover */
         }
         .table-header {
-            background-color: #edf2f7;
-            font-weight: 600;
-            padding: 0.75rem 1rem;
-            text-align: left;
+            background-color: #edf2f7; /* Light gray background for table headers */
+            font-weight: 600; /* Semi-bold font */
+            padding: 0.75rem 1rem; /* Padding for table headers */
+            text-align: left; /* Left align text */
         }
         .table-row {
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0; /* Separator between table rows */
         }
         .table-data {
-            padding: 0.75rem 1rem;
-            vertical-align: top;
-            word-break: break-all; /* Ensure long URLs wrap */
+            padding: 0.75rem 1rem; /* Padding for table data cells */
+            vertical-align: top; /* Align content to the top */
+            word-break: break-all; /* Ensure long URLs wrap to prevent overflow */
+        }
+        /* Custom Modal Styles (for messages, replacing alert()) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top of everything */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if content is too large */
+            background-color: rgba(0,0,0,0.4); /* Black background with transparency */
+            justify-content: center; /* Center modal content horizontally */
+            align-items: center; /* Center modal content vertically */
+        }
+        .modal-content {
+            background-color: #fefefe; /* White background for modal box */
+            margin: auto; /* Auto margin for centering */
+            padding: 20px; /* Padding inside modal */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            width: 80%; /* Width of modal */
+            max-width: 400px; /* Max width to prevent it from being too wide */
+            text-align: center; /* Center text within modal */
+        }
+        .close-button {
+            color: #aaa; /* Gray color for close icon */
+            float: right; /* Position to the right */
+            font-size: 28px; /* Larger font size for icon */
+            font-weight: bold; /* Bold icon */
+            cursor: pointer; /* Pointer cursor on hover */
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black; /* Darken on hover/focus */
+            text-decoration: none; /* No underline */
+            cursor: pointer; /* Ensure pointer cursor */
         }
     </style>
 </head>
@@ -54,9 +96,11 @@
         <nav class="container flex justify-between items-center">
             <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>
             <div>
+                <!-- Navigation links -->
                 <a href="/login.html" class="nav-link mr-4">Login</a>
                 <a href="/register.html" class="nav-link mr-4">Register</a>
                 <a href="/" class="nav-link">Shorten URL</a>
+                <!-- Logout button -->
                 <button id="logoutButton" class="nav-link bg-red-100 text-red-700 hover:bg-red-200 ml-4">Logout</button>
             </div>
         </nav>
@@ -65,10 +109,14 @@
     <main class="flex-grow container mt-10">
         <div class="card">
             <h2 class="text-2xl font-semibold text-gray-800 mb-6">Your Shortened Links</h2>
+            <!-- Loading message -->
             <div id="loadingMessage" class="text-center text-gray-600">Loading your links...</div>
+            <!-- Message when no links are found -->
             <div id="noLinksMessage" class="text-center text-gray-600 hidden">You haven't shortened any links yet.</div>
+            <!-- Error message display -->
             <div id="errorMessage" class="text-center text-red-600 hidden"></div>
-            
+           
+            <!-- Table to display shortened links -->
             <div id="linksTableContainer" class="overflow-x-auto hidden">
                 <table class="min-w-full bg-white rounded-lg shadow-sm">
                     <thead>
@@ -80,7 +128,7 @@
                         </tr>
                     </thead>
                     <tbody id="linksTableBody">
-                        <!-- Links will be inserted here -->
+                        <!-- Links will be dynamically inserted here by JavaScript -->
                     </tbody>
                 </table>
             </div>
@@ -91,7 +139,16 @@
         <p>&copy; 2024 GoShrink.it. All rights reserved.</p>
     </footer>
 
+    <!-- Custom Modal for displaying messages (replaces native alert/confirm) -->
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modalMessage" class="text-lg font-medium"></p>
+        </div>
+    </div>
+
     <script>
+        // Get references to DOM elements
         const logoutButton = document.getElementById('logoutButton');
         const loadingMessage = document.getElementById('loadingMessage');
         const noLinksMessage = document.getElementById('noLinksMessage');
@@ -99,69 +156,114 @@
         const linksTableContainer = document.getElementById('linksTableContainer');
         const linksTableBody = document.getElementById('linksTableBody');
 
+        const customModal = document.getElementById('customModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeButton = document.querySelector('#customModal .close-button'); // Ensure targeting modal's close button
+
+        // Event listener for when the DOM content is fully loaded
         document.addEventListener('DOMContentLoaded', fetchUserLinks);
 
+        // Event listener for the logout button
         logoutButton.addEventListener('click', () => {
-            localStorage.removeItem('token');
-            window.location.href = '/login.html'; // Redirect to login page
+            localStorage.removeItem('token'); // Remove the JWT token from local storage
+            // Show a modal message and then redirect to login page
+            showModal('Logged out successfully! Redirecting...', () => {
+                window.location.href = '/login.html';
+            });
         });
 
+        // --- Custom Modal Functions ---
+        // Close modal button event listener
+        closeButton.addEventListener('click', () => {
+            customModal.style.display = 'none';
+        });
+
+        // Close modal if user clicks outside the modal content
+        window.addEventListener('click', (event) => {
+            if (event.target == customModal) {
+                customModal.style.display = 'none';
+            }
+        });
+
+        /**
+         * Displays a custom modal message.
+         * @param {string} message - The message to display.
+         * @param {function} [callback] - An optional callback function to execute after the modal is closed or timeout.
+         * @param {number} [timeout=1500] - Time in milliseconds to auto-close the modal.
+         */
+        function showModal(message, callback = null, timeout = 1500) {
+            modalMessage.textContent = message;
+            customModal.style.display = 'flex'; // Use flexbox for centering
+            if (callback) {
+                 setTimeout(() => {
+                    customModal.style.display = 'none';
+                    callback();
+                }, timeout);
+            } else {
+                 setTimeout(() => {
+                    customModal.style.display = 'none';
+                }, timeout);
+            }
+        }
+
+        // Fetches shortened URLs for the authenticated user from the backend
         async function fetchUserLinks() {
-            const token = localStorage.getItem('token');
-            // IMPORTANT: Check if token is a valid non-empty string
+            const token = localStorage.getItem('token'); // Retrieve JWT token
+
+            // Validate token existence and format
             if (!token || typeof token !== 'string' || token.length === 0) {
                 console.warn('No valid token found in localStorage. Redirecting to login.');
-                errorMessageDiv.textContent = 'Session expired or not logged in. Please log in again.';
-                errorMessageDiv.classList.remove('hidden');
-                setTimeout(() => {
+                showModal('Session expired or not logged in. Please log in again.', () => {
                     window.location.href = '/login.html';
-                }, 1500); // Give user a moment to see the message
+                }, 1500);
                 return;
             }
 
+            // Show loading message and hide other messages
             loadingMessage.classList.remove('hidden');
             noLinksMessage.classList.add('hidden');
             errorMessageDiv.classList.add('hidden');
             linksTableContainer.classList.add('hidden');
 
             try {
+                // Send GET request to fetch user's URLs
                 const response = await fetch('/api/v1/me/urls', {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`, // Ensure this format is consistent with backend's AuthMiddleware
+                        'Authorization': `Bearer ${token}`, // Include JWT token in Authorization header
                         'Content-Type': 'application/json'
                     },
                 });
 
                 loadingMessage.classList.add('hidden'); // Hide loading message once response is received
 
-                // Robust response parsing: Expect GeneralResponse from backend
+                // Robust response parsing: always try to parse as JSON, fallback to text
                 let responseData;
                 const contentType = response.headers.get('content-type');
                 if (contentType && contentType.includes('application/json')) {
                     responseData = await response.json();
                 } else {
-                    responseData = { success: false, message: await response.text() }; // Fallback for non-JSON or empty responses
+                    responseData = { success: false, message: `Unexpected server response (not JSON): ${await response.text()}` };
                 }
 
                 if (response.ok && responseData.success) {
-                    // Data is expected to be an array here (even if empty)
-                    if (Array.isArray(responseData.Data) && responseData.Data.length === 0) {
+                    // Check if the 'data' field is an array and contains links
+                    if (Array.isArray(responseData.data) && responseData.data.length === 0) {
                         noLinksMessage.classList.remove('hidden'); // Show "no links" message
-                    } else if (Array.isArray(responseData.Data)) { // Ensure it's an array before rendering
-                        renderLinksTable(responseData.Data); // Pass the actual data array
+                    } else if (Array.isArray(responseData.data)) {
+                        // Render the links table if data is an array
+                        renderLinksTable(responseData.data);
                         linksTableContainer.classList.remove('hidden');
                     } else {
-                        // This case handles if response.ok is true but Data is not an array, which is unexpected
-                        errorMessageDiv.textContent = 'Unexpected data format received from server.';
+                        // Unexpected data format received (success: true but data not an array)
+                        errorMessageDiv.textContent = 'Unexpected data format received from server (expected a list of links).';
                         errorMessageDiv.classList.remove('hidden');
                     }
                 } else {
-                    // Handle specific error statuses or use generic error message
-                    if (response.status === 401) {
-                        errorMessageDiv.textContent = 'Session expired or unauthorized. Please log in again.';
-                        localStorage.removeItem('token'); // Clear invalid token
-                        setTimeout(() => {
+                    // Handle specific error statuses
+                    if (response.status === 401 || response.status === 403) {
+                        showModal('Session expired or unauthorized. Please log in again.', () => {
+                            localStorage.removeItem('token'); // Clear invalid token
                             window.location.href = '/login.html';
                         }, 2000); // Redirect after a short delay
                     } else {
@@ -171,26 +273,37 @@
                     errorMessageDiv.classList.remove('hidden');
                 }
             } catch (error) {
-                console.error('Error fetching user links:', error);
+                console.error('Network error or server unavailable while fetching links:', error);
                 loadingMessage.classList.add('hidden'); // Ensure loading is hidden on network error
                 errorMessageDiv.textContent = 'Network error or server unavailable. Please try again.';
                 errorMessageDiv.classList.remove('hidden');
             }
         }
 
+        // Renders the list of shortened URLs into the HTML table
         function renderLinksTable(links) {
-            linksTableBody.innerHTML = ''; // Clear existing rows
+            linksTableBody.innerHTML = ''; // Clear any existing table rows
+
+            // Iterate over each link and create a table row
             links.forEach(link => {
                 const row = document.createElement('tr');
                 row.classList.add('table-row');
+
+                // Construct the full short URL using the current origin
                 const fullShortURL = `${window.location.origin}/${link.short_url}`;
+
+                // Format the 'CreatedAt' timestamp into a localized date string
+                const createdAtDate = new Date(link.created_at);
+                const formattedDate = createdAtDate.toLocaleDateString(); // e.g., "7/21/2024" or "21/07/2024"
+
+                // Populate the row's inner HTML with link data
                 row.innerHTML = `
                     <td class="table-data"><a href="${fullShortURL}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${link.short_url}</a></td>
                     <td class="table-data">${link.original_url}</td>
                     <td class="table-data">${link.visits}</td>
-                    <td class="table-data">${new Date(link.created_at).toLocaleDateString()}</td>
+                    <td class="table-data">${formattedDate}</td>
                 `;
-                linksTableBody.appendChild(row);
+                linksTableBody.appendChild(row); // Add the row to the table body
             });
         }
     </script>

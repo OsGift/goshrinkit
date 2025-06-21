@@ -4,51 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - GoShrink.it</title>
+    <!-- Tailwind CSS for utility-first styling -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Google Font: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Custom styles for the overall page and components */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Inter', sans-serif; /* Apply Inter font globally */
+            background-color: #f0f2f5; /* Light gray background */
         }
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
+            max-width: 800px; /* Max width for content area */
+            margin: 0 auto; /* Center the container */
+            padding: 2rem; /* Padding around content */
         }
         .card {
-            background-color: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
+            background-color: white; /* White background for card elements */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            padding: 2rem; /* Internal padding */
         }
         .button-primary {
-            background-color: #4c51bf;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.2s ease-in-out;
+            background-color: #4c51bf; /* Primary button background (Indigo 600) */
+            color: white; /* White text color */
+            padding: 0.75rem 1.5rem; /* Vertical and horizontal padding */
+            border-radius: 0.5rem; /* Rounded corners */
+            transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
         }
         .button-primary:hover {
-            background-color: #3b3f8f;
+            background-color: #3b3f8f; /* Darker indigo on hover */
         }
         .input-field {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            margin-top: 0.5rem;
+            width: 100%; /* Full width input */
+            padding: 0.75rem; /* Padding inside input */
+            border: 1px solid #d1d5db; /* Light gray border */
+            border-radius: 0.5rem; /* Rounded corners */
+            margin-top: 0.5rem; /* Space above input */
         }
         .nav-link {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            text-decoration: none;
-            color: #4c51bf;
-            font-weight: 600;
-            transition: background-color 0.2s ease-in-out;
+            padding: 0.5rem 1rem; /* Padding for navigation links */
+            border-radius: 0.5rem; /* Rounded corners */
+            text-decoration: none; /* No underline by default */
+            color: #4c51bf; /* Primary link color */
+            font-weight: 600; /* Semi-bold font */
+            transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
         }
         .nav-link:hover {
-            background-color: #e0e7ff;
+            background-color: #e0e7ff; /* Light indigo on hover */
         }
     </style>
 </head>
@@ -57,6 +60,7 @@
         <nav class="container flex justify-between items-center">
             <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>
             <div>
+                <!-- Navigation links -->
                 <a href="/login.html" class="nav-link mr-4">Login</a>
                 <a href="/register.html" class="nav-link mr-4">Register</a>
                 <a href="/dashboard.html" class="nav-link">Dashboard</a>
@@ -66,7 +70,7 @@
 
     <main class="flex-grow container mt-10">
         <div class="card w-full max-w-md mx-auto">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Register</h2>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Create Your Account</h2>
             <form id="registerForm" class="space-y-4">
                 <div>
                     <label for="username" class="block text-gray-700 font-medium mb-1">Username:</label>
@@ -83,10 +87,11 @@
                 <button type="submit" class="button-primary w-full">Register</button>
             </form>
 
+            <!-- Message display area (for success/error messages) -->
             <div id="message" class="mt-6 p-4 rounded-lg hidden">
                 <p id="messageText" class="font-semibold"></p>
             </div>
-            <p class="text-center text-gray-600 mt-4">Already have an account? <a href="/login.html" class="text-blue-600 hover:underline">Login here</a></p>
+            <p class="text-center text-gray-600 mt-4">Already have an account? <a href="/login.html" class="text-blue-600 hover:underline font-medium">Login here</a></p>
         </div>
     </main>
 
@@ -95,21 +100,33 @@
     </footer>
 
     <script>
+        // Get references to DOM elements
         const registerForm = document.getElementById('registerForm');
         const messageDiv = document.getElementById('message');
         const messageText = document.getElementById('messageText');
 
+        // Event listener for the registration form submission
         registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent default form submission
 
+            // Hide previous messages and reset styling classes
             messageDiv.classList.add('hidden');
-            // Clear all previous message classes to ensure correct styling for new messages
             messageDiv.classList.remove('bg-green-100', 'border-green-300', 'text-green-800', 'bg-red-100', 'border-red-300', 'text-red-800');
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            const username = document.getElementById('username').value.trim(); // Get and trim username input
+            const password = document.getElementById('password').value; // Get password input
+            const confirmPassword = document.getElementById('confirmPassword').value; // Get confirm password input
 
+            // --- Client-side input validation ---
+            // 1. Check for empty fields
+            if (!username || !password || !confirmPassword) {
+                messageText.textContent = 'All fields are required.';
+                messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                messageDiv.classList.remove('hidden');
+                return;
+            }
+
+            // 2. Check if passwords match
             if (password !== confirmPassword) {
                 messageText.textContent = 'Passwords do not match.';
                 messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
@@ -117,7 +134,16 @@
                 return;
             }
 
+            // 3. Enforce minimum password length (matches backend validation)
+            if (password.length < 8) {
+                messageText.textContent = 'Password must be at least 8 characters long.';
+                messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
+                messageDiv.classList.remove('hidden');
+                return;
+            }
+
             try {
+                // Send the registration request to the backend API
                 const response = await fetch('/api/v1/register', {
                     method: 'POST',
                     headers: {
@@ -126,34 +152,36 @@
                     body: JSON.stringify({ username, password }),
                 });
 
-                // Robust response parsing: Expect GeneralResponse from backend
+                // Robust response parsing: always try to parse as JSON, fallback to text
                 let responseData;
                 const contentType = response.headers.get('content-type');
                 if (contentType && contentType.includes('application/json')) {
                     responseData = await response.json();
                 } else {
-                    responseData = { success: false, message: await response.text() }; // Fallback for non-JSON or empty responses
+                    // Fallback for non-JSON responses (e.g., plain text errors from server)
+                    responseData = { success: false, message: `Unexpected server response (not JSON): ${await response.text()}` };
                 }
 
                 if (response.ok && responseData.success) {
                     messageText.textContent = 'Registration successful! You can now log in.';
-                    messageDiv.classList.add('bg-green-100', 'border-green-300', 'text-green-800');
-                    messageDiv.classList.remove('hidden');
-                    registerForm.reset(); // Clear form
+                    messageDiv.classList.add('bg-green-100', 'border-green-300', 'text-green-800'); // Apply success styling
+                    messageDiv.classList.remove('hidden'); // Show message
+                    registerForm.reset(); // Clear the form fields after successful registration
+                    // Redirect to the login page after a short delay
                     setTimeout(() => {
                         window.location.href = '/login.html';
                     }, 1500);
                 } else {
-                    // Use the message from the backend's JSON response for errors
+                    // Display error message from the backend's response, or a generic one
                     messageText.textContent = responseData.message || 'Registration failed. Please try again.';
-                    messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
-                    messageDiv.classList.remove('hidden');
+                    messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800'); // Apply error styling
+                    messageDiv.classList.remove('hidden'); // Show message
                 }
             } catch (error) {
-                console.error('Error:', error);
-                messageText.textContent = 'Network error or server unavailable. Please check console for more details.';
-                messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800');
-                messageDiv.classList.remove('hidden');
+                console.error('Network error or server unavailable during registration:', error); // Log network errors
+                messageText.textContent = 'Network error or server unavailable. Please check your internet connection.';
+                messageDiv.classList.add('bg-red-100', 'border-red-300', 'text-red-800'); // Apply error styling
+                messageDiv.classList.remove('hidden'); // Show message
             }
         });
     </script>

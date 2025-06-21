@@ -4,51 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoShrink.it - URL Shortener</title>
+    <!-- Tailwind CSS for utility-first styling -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Google Font: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons (e.g., copy icon) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Custom styles for the overall page and components */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Inter', sans-serif; /* Apply Inter font globally */
+            background-color: #f0f2f5; /* Light gray background */
         }
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
+            max-width: 800px; /* Max width for content area */
+            margin: 0 auto; /* Center the container */
+            padding: 2rem; /* Padding around content */
         }
         .card {
-            background-color: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
+            background-color: white; /* White background for card elements */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            padding: 2rem; /* Internal padding */
         }
         .button-primary {
-            background-color: #4c51bf;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.2s ease-in-out;
+            background-color: #4c51bf; /* Primary button background (Indigo 600) */
+            color: white; /* White text color */
+            padding: 0.75rem 1.5rem; /* Vertical and horizontal padding */
+            border-radius: 0.5rem; /* Rounded corners */
+            transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
+            display: inline-flex; /* Use flexbox for icon and text alignment */
+            align-items: center; /* Vertically align items */
+            justify-content: center; /* Center content horizontally */
         }
         .button-primary:hover {
-            background-color: #3b3f8f;
+            background-color: #3b3f8f; /* Darker indigo on hover */
         }
         .input-field {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            margin-top: 0.5rem;
+            width: 100%; /* Full width input */
+            padding: 0.75rem; /* Padding inside input */
+            border: 1px solid #d1d5db; /* Light gray border */
+            border-radius: 0.5rem; /* Rounded corners */
+            margin-top: 0.5rem; /* Space above input */
         }
         .nav-link {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            text-decoration: none;
-            color: #4c51bf;
-            font-weight: 600;
-            transition: background-color 0.2s ease-in-out;
+            padding: 0.5rem 1rem; /* Padding for navigation links */
+            border-radius: 0.5rem; /* Rounded corners */
+            text-decoration: none; /* No underline by default */
+            color: #4c51bf; /* Primary link color */
+            font-weight: 600; /* Semi-bold font */
+            transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
         }
         .nav-link:hover {
-            background-color: #e0e7ff;
+            background-color: #e0e7ff; /* Light indigo on hover */
+        }
+
+        /* Custom Modal Styles (for messages, replacing alert()) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top of everything */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if content is too large */
+            background-color: rgba(0,0,0,0.4); /* Black background with transparency */
+            justify-content: center; /* Center modal content horizontally */
+            align-items: center; /* Center modal content vertically */
+        }
+        .modal-content {
+            background-color: #fefefe; /* White background for modal box */
+            margin: auto; /* Auto margin for centering */
+            padding: 20px; /* Padding inside modal */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            width: 80%; /* Width of modal */
+            max-width: 400px; /* Max width to prevent it from being too wide */
+            text-align: center; /* Center text within modal */
+        }
+        .close-button {
+            color: #aaa; /* Gray color for close icon */
+            float: right; /* Position to the right */
+            font-size: 28px; /* Larger font size for icon */
+            font-weight: bold; /* Bold icon */
+            cursor: pointer; /* Pointer cursor on hover */
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black; /* Darken on hover/focus */
+            text-decoration: none; /* No underline */
+            cursor: pointer; /* Ensure pointer cursor */
         }
     </style>
 </head>
@@ -57,6 +103,7 @@
         <nav class="container flex justify-between items-center">
             <h1 class="text-2xl font-bold text-gray-800"><a href="/index.html" class="nav-link mr-4">goshrinkit</a></h1>
             <div>
+                <!-- Navigation links -->
                 <a href="/login.html" class="nav-link mr-4">Login</a>
                 <a href="/register.html" class="nav-link mr-4">Register</a>
                 <a href="/dashboard.html" class="nav-link">Dashboard</a>
@@ -75,20 +122,32 @@
                 <div>
                     <label for="customSlug" class="block text-gray-700 font-medium mb-1">Custom Slug (optional):</label>
                     <input type="text" id="customSlug" name="custom_slug" placeholder="my-awesome-link" class="input-field">
+                    <p class="text-sm text-gray-500 mt-1">Leave empty for a random slug. Max 20 characters, alphanumeric, hyphens, and underscores only.</p>
                 </div>
                 <div>
-                    <label for="expiration" class="block text-gray-700 font-medium mb-1">Expiration Date (optional, ISO 8601):</label>
+                    <label for="expiration" class="block text-gray-700 font-medium mb-1">Expiration Date (optional):</label>
+                    <!-- datetime-local input type allows selecting date and time -->
                     <input type="datetime-local" id="expiration" name="expiration" class="input-field">
-                    <p class="text-sm text-gray-500 mt-1">Example: 2024-12-31T23:59:59Z</p>
+                    <p class="text-sm text-gray-500 mt-1">Select a future date and time. Links expire at this time (local time).</p>
                 </div>
-                <button type="submit" class="button-primary w-full">Shorten URL</button>
+                <button type="submit" class="button-primary w-full">
+                    <i class="fas fa-link mr-2"></i> Shorten URL
+                </button>
             </form>
 
+            <!-- Result display area -->
             <div id="result" class="mt-8 p-4 bg-green-100 border border-green-300 rounded-lg text-green-800 hidden">
                 <p class="font-semibold mb-2">Your shortened URL:</p>
-                <a id="shortenedLink" class="text-blue-600 hover:underline break-all" target="_blank" rel="noopener noreferrer"></a>
-                <button onclick="copyToClipboard()" class="ml-4 px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600">Copy</button>
+                <div class="flex items-center break-all">
+                    <!-- Link to the shortened URL -->
+                    <a id="shortenedLink" class="text-blue-600 hover:underline flex-grow" target="_blank" rel="noopener noreferrer"></a>
+                    <!-- Copy button with Font Awesome icon -->
+                    <button id="copyButton" class="ml-4 px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600">
+                        <i class="far fa-copy mr-1"></i> Copy
+                    </button>
+                </div>
             </div>
+            <!-- Error display area -->
             <div id="error" class="mt-8 p-4 bg-red-100 border border-red-300 rounded-lg text-red-800 hidden">
                 <p id="errorMessage" class="font-semibold"></p>
             </div>
@@ -99,85 +158,216 @@
         <p>&copy; 2024 GoShrink.it. All rights reserved.</p>
     </footer>
 
+    <!-- Custom Modal for displaying messages (replaces native alert/confirm) -->
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modalMessage" class="text-lg font-medium"></p>
+        </div>
+    </div>
+
     <script>
+        // Get references to DOM elements
         const shortenForm = document.getElementById('shortenForm');
+        const originalUrlInput = document.getElementById('originalUrl');
+        const customSlugInput = document.getElementById('customSlug');
+        const expirationInput = document.getElementById('expiration');
         const resultDiv = document.getElementById('result');
         const errorDiv = document.getElementById('error');
         const shortenedLink = document.getElementById('shortenedLink');
-        const errorMessage = document.getElementById('errorMessage');
-        const expirationInput = document.getElementById('expiration');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const copyButton = document.getElementById('copyButton');
 
-        // Set default expiration to 1 day from now
-        const now = new Date();
-        now.setDate(now.getDate() + 1);
-        expirationInput.value = now.toISOString().substring(0, 16); // Format for datetime-local input
+        const customModal = document.getElementById('customModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeButton = document.querySelector('#customModal .close-button'); // Ensure targeting modal's close button
 
+        // Set default expiration date for convenience (1 day from now, local time)
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            now.setDate(now.getDate() + 1); // Set to tomorrow
+            // Format to YYYY-MM-DDTHH:MM for datetime-local input
+            // Adjust for timezone offset to get the local time representation for the input
+            expirationInput.value = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+        });
+
+        // Event listener for the shorten form submission
         shortenForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent default form submission
 
+            // Hide previous messages
             resultDiv.classList.add('hidden');
             errorDiv.classList.add('hidden');
 
-            const originalUrl = document.getElementById('originalUrl').value;
-            const customSlug = document.getElementById('customSlug').value;
-            const expiration = expirationInput.value ? new Date(expirationInput.value).toISOString() : '';
+            const originalUrl = originalUrlInput.value.trim();
+            const customSlug = customSlugInput.value.trim();
+            const expiration = expirationInput.value; // Value from datetime-local input (e.g., "2024-07-21T14:30")
 
-            const token = localStorage.getItem('token'); // Get JWT token from local storage
+            // --- Client-side input validation ---
+            // 1. Validate Original URL format
+            if (!originalUrl) {
+                errorMessageDiv.textContent = 'Original URL cannot be empty.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            try {
+                // Use URL constructor for basic format validation
+                new URL(originalUrl);
+                // Further check for http/https scheme
+                if (!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) {
+                    errorMessageDiv.textContent = 'URL must start with http:// or https://.';
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+            } catch (error) {
+                errorMessageDiv.textContent = 'Please enter a valid URL (e.g., https://example.com/path).';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
 
+            // 2. Validate Custom Slug format (matches backend regex)
+            const customSlugRegex = /^[a-zA-Z0-9_-]*$/; // Allows empty string for auto-generation
+            if (customSlug && (!customSlugRegex.test(customSlug) || customSlug.length > 20)) {
+                errorMessageDiv.textContent = 'Custom slug can only contain alphanumeric characters, hyphens, and underscores, max 20 characters.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            // 3. Validate Expiration Date
+            let expirationISO = '';
+            if (expiration) {
+                const selectedDate = new Date(expiration);
+                if (isNaN(selectedDate.getTime())) { // Check if date is invalid
+                    errorMessageDiv.textContent = 'Invalid expiration date selected.';
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+                if (selectedDate < new Date()) { // Check if date is in the past
+                    errorMessageDiv.textContent = 'Expiration date cannot be in the past.';
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+                // Convert local datetime-local value to UTC ISO 8601 string for backend
+                expirationISO = selectedDate.toISOString();
+            }
+
+            const token = localStorage.getItem('token'); // Retrieve JWT token from local storage
+
+            // Construct the payload for the API request
             const payload = {
                 original_url: originalUrl,
             };
             if (customSlug) {
                 payload.custom_slug = customSlug;
             }
-            if (expiration) {
-                payload.expiration = expiration;
+            if (expirationISO) {
+                payload.expiration = expirationISO; // Use the ISO formatted expiration
             }
 
             try {
+                // Send the request to the backend API
                 const response = await fetch('/api/v1/shorten', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
+                        // Include Authorization header only if a token exists
+                        'Authorization': token ? `Bearer ${token}` : '',
                     },
                     body: JSON.stringify(payload),
                 });
 
-                // Robust response parsing: Expect GeneralResponse from backend
+                // Robust response parsing: always try to parse as JSON, fallback to text
                 let responseData;
                 const contentType = response.headers.get('content-type');
                 if (contentType && contentType.includes('application/json')) {
                     responseData = await response.json();
                 } else {
-                    responseData = { success: false, message: await response.text() }; // Fallback for non-JSON or empty responses
+                    responseData = { success: false, message: `Unexpected server response (not JSON): ${await response.text()}` };
                 }
 
                 if (response.ok && responseData.success) {
-                    const fullShortURL = `${window.location.origin}/${responseData.Data.ShortURL}`; // Access Data.ShortURL
+                    // Update the result display with the shortened URL
+                    const fullShortURL = `${window.location.origin}/${responseData.data.short_url}`; // Access 'data.short_url'
                     shortenedLink.href = fullShortURL;
                     shortenedLink.textContent = fullShortURL;
                     resultDiv.classList.remove('hidden');
+                    shortenForm.reset(); // Clear the form fields after success
+                    // Reset expiration input to default (tomorrow) after form reset
+                    const newNow = new Date();
+                    newNow.setDate(newNow.getDate() + 1);
+                    expirationInput.value = new Date(newNow.getTime() - (newNow.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+
                 } else {
-                    errorMessage.textContent = responseData.message || 'An unexpected error occurred.';
+                    // Display error message from the backend, or a generic one
+                    errorMessageDiv.textContent = responseData.message || 'An unexpected error occurred. Please try again.';
                     errorDiv.classList.remove('hidden');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                errorMessage.textContent = 'Network error or server unavailable.';
+                console.error('Network error or server unavailable:', error);
+                errorMessageDiv.textContent = 'Network error or server unavailable. Please check your internet connection.';
                 errorDiv.classList.remove('hidden');
             }
         });
 
-        function copyToClipboard() {
+        // Event listener for the copy button
+        copyButton.addEventListener('click', () => {
             const linkText = shortenedLink.textContent;
+            // Use modern Clipboard API if available
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(linkText).then(() => {
+                    showModal('Copied to clipboard!', null, 1000); // Show success message via modal
+                }).catch(err => {
+                    console.error('Failed to copy using Clipboard API: ', err);
+                    fallbackCopyToClipboard(linkText); // Fallback if API fails
+                });
+            } else {
+                fallbackCopyToClipboard(linkText); // Fallback for older browsers or restricted environments
+            }
+        });
+
+        // Fallback function for copying text to clipboard (deprecated but widely supported)
+        function fallbackCopyToClipboard(text) {
             const tempInput = document.createElement('input');
             document.body.appendChild(tempInput);
-            tempInput.value = linkText;
+            tempInput.value = text;
             tempInput.select();
-            document.execCommand('copy');
+            document.execCommand('copy'); // Execute copy command
             document.body.removeChild(tempInput);
-            alert('Copied to clipboard!'); // Replace with custom modal in production
+            showModal('Copied to clipboard! (Fallback method used)', null, 1000);
+        }
+
+        // --- Custom Modal Functions ---
+        // Close modal button event listener
+        closeButton.addEventListener('click', () => {
+            customModal.style.display = 'none';
+        });
+
+        // Close modal if user clicks outside the modal content
+        window.addEventListener('click', (event) => {
+            if (event.target == customModal) {
+                customModal.style.display = 'none';
+            }
+        });
+
+        /**
+         * Displays a custom modal message.
+         * @param {string} message - The message to display.
+         * @param {function} [callback] - An optional callback function to execute after the modal is closed or timeout.
+         * @param {number} [timeout=1500] - Time in milliseconds to auto-close the modal.
+         */
+        function showModal(message, callback = null, timeout = 1500) {
+            modalMessage.textContent = message;
+            customModal.style.display = 'flex'; // Use flex to center content
+            if (callback) { // If callback is provided, ensure modal closes before executing
+                 setTimeout(() => {
+                    customModal.style.display = 'none';
+                    callback();
+                }, timeout);
+            } else { // No callback, just auto-close
+                 setTimeout(() => {
+                    customModal.style.display = 'none';
+                }, timeout);
+            }
         }
     </script>
 </body>
